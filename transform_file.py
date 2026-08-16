@@ -245,6 +245,11 @@ def transform_excel_to_csv(input_file_path, output_csv_path):
 
     out_df = pd.DataFrame(index=df.index, columns=target_columns)
 
+    # Order Tracking
+    out_df["Order ID"] = df.get("Order ID", "").apply(
+        lambda x: str(x).strip() if pd.notna(x) and str(x).lower() != "nan" else ""
+    )
+
     # Athlete Information
     athlete_names = df["Athlete Name"].apply(split_name)
     out_df["first"] = [n[0] for n in athlete_names]
