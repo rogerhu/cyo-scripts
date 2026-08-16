@@ -138,6 +138,16 @@ def process_parents(row):
 def transform_excel_to_csv(input_file_path, output_csv_path):
     df = pd.read_excel(input_file_path)
 
+    # Filter out waitlisted records (matches "Yes", "yes", "YES", etc.)
+    if "Waitlist" in df.columns:
+        waitlist_mask = (
+            df["Waitlist"].astype(str).str.strip().str.lower() == "yes"
+        )
+        excluded_count = waitlist_mask.sum()
+        df = df[~waitlist_mask].copy()
+        if excluded_count > 0:
+            print(f"Excluded {excluded_count} waitlisted record(s).")
+
     target_columns = [
         "first",
         "last",

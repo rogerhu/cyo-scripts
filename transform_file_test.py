@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
 
-from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob
+from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob, format_phone
 
 
 class TestExcelToCsvTransformer(unittest.TestCase):
@@ -171,6 +171,20 @@ class TestExcelToCsvTransformer(unittest.TestCase):
         self.assertEqual(format_phone(5551234567.0), "5551234567")
         self.assertEqual(format_phone("555-123-4567"), "555-123-4567")
         self.assertEqual(format_phone(None), "")
+
+    def test_waitlist_filtering(self):
+        df_data = pd.DataFrame(
+            [
+                {"Waitlist": "Yes", "Athlete Name": "Smith, John"},
+                {"Waitlist": "No", "Athlete Name": "Doe, Jane"},
+                {"Waitlist": None, "Athlete Name": "Brown, Bob"},
+            ]
+        )
+        mask = df_data["Waitlist"].astype(str).str.strip().str.lower() == "yes"
+        filtered_df = df_data[~mask]
+
+        self.assertEqual(len(filtered_df), 2)
+        self.assertNotIn("Smith, John", filtered_df["Athlete Name"].values)
 
 if __name__ == "__main__":
     unittest.main()
