@@ -134,6 +134,59 @@ def process_parents(row):
         }
     )
 
+def process_school_fields(row):
+    """Processes 'School' and 'Other School' to return both school assignment fields."""
+    raw_school = str(row.get("School", "")).strip()
+    other_school = str(row.get("Other School", "")).strip()
+    school_lower = raw_school.lower()
+
+    # Rule 1: Perpetua / Pereptua check
+    if "pereptua" in school_lower or "perpetua" in school_lower:
+        perpetua_status = "Faith Formation Student"
+    else:
+        perpetua_status = "No Affiliation with School or Church"
+
+    # Rule 2: Fetch string if "Other"
+    if school_lower == "other":
+        target_school = (
+            other_school
+            if pd.notna(other_school) and other_school != "nan"
+            else "Other"
+        )
+    else:
+        target_school = (
+            raw_school if pd.notna(raw_school) and raw_school != "nan" else ""
+        )
+
+    # Rule 3: Transform specific school nicknames / typos to full official titles
+    target_lower = target_school.lower()
+
+    if "stanley" in target_lower and "middle" not in target_lower:
+        target_school = "Stanley Middle School"
+    elif (
+        "burton valley" in target_lower
+        or target_lower == "bve"
+        or "burton valley elementary" in target_lower
+    ):
+        target_school = "Burton Valley Elementary"
+    elif "happy valley" in target_lower:
+        target_school = "Happy Valley Elementary"
+    elif "seven hills" in target_lower:
+        target_school = "The Seven Hills School"
+
+    return pd.Series(
+        {
+            "St. Perpetua or Faith Formation Student?": perpetua_status,
+            "School Attending in Fall 2026": target_school,
+        }
+    )
+
+    return pd.Series(
+        {
+            "St. Perpetua or Faith Formation Student?": perpetua_status,
+            "School Attending in Fall 2026": fall_school,
+        }
+    )
 
 def transform_excel_to_csv(input_file_path, output_csv_path):
     df = pd.read_excel(input_file_path)
@@ -203,6 +256,15 @@ def transform_excel_to_csv(input_file_path, output_csv_path):
     out_df["email"] = df.get("Registration Email", "")
     out_df["Team"] = df.get("Team", "")
     out_df["Division"] = df.get("Division", "")
+
+    # School Logic Mapping
+    school_data = df.apply(process_school_fields, axis=1)
+    out_df["St. Perpetua or Faith Formation Student?"] = school_data[
+        "St. Perpetua or Faith Formation Student?"
+    ]
+    out_df["School Attending in Fall 2026"] = school_data[
+        "School Attending in Fall 2026"
+    ]
 
     # Parent Logic (Strict validation - raises ValueError on mismatch)
     parent_data = df.apply(process_parents, axis=1)

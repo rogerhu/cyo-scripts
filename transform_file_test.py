@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
 
-from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob, format_phone
+from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob, format_phone, process_school_fields
 
 
 class TestExcelToCsvTransformer(unittest.TestCase):
@@ -185,6 +185,45 @@ class TestExcelToCsvTransformer(unittest.TestCase):
 
         self.assertEqual(len(filtered_df), 2)
         self.assertNotIn("Smith, John", filtered_df["Athlete Name"].values)
+
+    def test_process_school_fields(self):
+        # St. Pereptua condition
+        row_perpetua = pd.Series({"School": "St. Pereptua School", "Other School": ""})
+        res = process_school_fields(row_perpetua)
+        self.assertEqual(res["St. Perpetua or Faith Formation Student?"], "Faith Formation Student")
+        self.assertEqual(res["School Attending in Fall 2026"], "St. Pereptua School")
+
+        # Other condition
+        row_other = pd.Series({"School": "Other", "Other School": "Lincoln High"})
+        res = process_school_fields(row_other)
+        self.assertEqual(res["St. Perpetua or Faith Formation Student?"], "No Affiliation with School or Church")
+        self.assertEqual(res["School Attending in Fall 2026"], "Lincoln High")
+
+    def test_school_transformations(self):
+        test_cases = [
+            ({"School": "Stanley", "Other School": ""}, "Stanley Middle School"),
+            (
+                {"School": "BVE", "Other School": ""},
+                "Burton Valley Elementary",
+        ),
+            (
+                {"School": "Burton Valley", "Other School": ""},
+                "Burton Valley Elementary",
+            ),
+            (
+                {"School": "happy valley", "Other School": ""},
+                "Happy Valley Elementary",
+            ),
+            (
+            {"School": "Seven Hills", "Other School": ""},
+                "The Seven Hills School",
+            ),
+        ]
+
+        for row_dict, expected in test_cases:
+            row = pd.Series(row_dict)
+            res = process_school_fields(row)
+            self.assertEqual(res["School Attending in Fall 2026"], expected)
 
 if __name__ == "__main__":
     unittest.main()
