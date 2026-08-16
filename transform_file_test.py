@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
 
-from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address
+from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob
 
 
 class TestExcelToCsvTransformer(unittest.TestCase):
@@ -155,6 +155,22 @@ class TestExcelToCsvTransformer(unittest.TestCase):
         # Verify output saved to CSV path
         mock_to_csv.assert_called_once_with("output.csv", index=False)
 
+    def test_format_dob_variations(self):
+        # m/dd/yy
+        self.assertEqual(format_dob("1/05/12"), "01/05/2012")
+        # mm/dd/yy
+        self.assertEqual(format_dob("01/05/12"), "01/05/2012")
+        # m/d/yyyy
+        self.assertEqual(format_dob("1/5/2012"), "01/05/2012")
+        # Empty / NaN
+        self.assertEqual(format_dob(None), "")
+        self.assertEqual(format_dob(""), "")
+
+    def test_format_phone(self):
+        self.assertEqual(format_phone("5551234567.0"), "5551234567")
+        self.assertEqual(format_phone(5551234567.0), "5551234567")
+        self.assertEqual(format_phone("555-123-4567"), "555-123-4567")
+        self.assertEqual(format_phone(None), "")
 
 if __name__ == "__main__":
     unittest.main()

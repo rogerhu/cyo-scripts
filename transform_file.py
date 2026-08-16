@@ -33,6 +33,41 @@ def combine_address(addr1, addr2):
         return f"{a1}, {a2}"
     return a1 or a2
 
+def format_dob(dob_val):
+    """Converts diverse date inputs (e.g., '1/05/12', '01/05/2012', Datetime) to 'MM/DD/YYYY'.
+
+    Handles missing or invalid date strings safely.
+    """
+    if pd.isna(dob_val) or not str(dob_val).strip():
+        return ""
+
+    try:
+        # Convert to pandas datetime object (handles m/dd/yy, yyyy-mm-dd, Excel timestamps)
+        parsed_date = pd.to_datetime(dob_val)
+        return parsed_date.strftime("%m/%d/%Y")
+    except Exception:
+        # Returns raw string if parsing fails
+        return str(dob_val).strip()
+
+def format_phone(phone_val):
+    """Formats phone numbers by removing floating point zeros (.0) and decimals."""
+    if pd.isna(phone_val) or not str(phone_val).strip():
+        return ""
+
+    phone_str = str(phone_val).strip()
+
+    # Remove trailing .0 from float conversions
+    if phone_str.endswith(".0"):
+        phone_str = phone_str[:-2]
+
+    # Handle scientific notation if pandas read large numbers as float
+    try:
+        if "e" in phone_str.lower():
+            phone_str = f"{int(float(phone_str))}"
+    except ValueError:
+        pass
+
+    return phone_str
 
 def process_parents(row):
     """Determines primary (p1) and secondary (p2) parents.
@@ -45,12 +80,12 @@ def process_parents(row):
     # Parent 1 raw data
     p1_name = row.get("Parent 1 Name", "")
     p1_email = str(row.get("Parent 1 Email", "")).strip()
-    p1_cell = row.get("Parent 1 Cell", "")
+    p1_cell = format_phone(row.get("Parent 1 Cell", ""))
 
     # Parent 2 raw data
     p2_name = row.get("Parent 2 Name", "")
     p2_email = str(row.get("Parent 2 Email", "")).strip()
-    p2_cell = row.get("Parent 2 Cell", "")
+    p2_cell = format_phone(row.get("Parent 2 Cell", ""))
 
     p1_match = reg_email and (p1_email.lower() == reg_email)
     p2_match = reg_email and (p2_email.lower() == reg_email)
@@ -151,7 +186,10 @@ def transform_excel_to_csv(input_file_path, output_csv_path):
     out_df["city"] = df.get("City", "")
     out_df["state"] = df.get("State", "")
     out_df["zip"] = df.get("ZIP", "")
-    out_df["birthdate"] = df.get("DOB", "")
+
+    # Format DOB to MM/DD/YYYY
+    out_df["birthdate"] = df.get("DOB", "").apply(format_dob)
+
     out_df["email"] = df.get("Registration Email", "")
     out_df["Team"] = df.get("Team", "")
     out_df["Division"] = df.get("Division", "")
