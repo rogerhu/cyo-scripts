@@ -1,5 +1,5 @@
 import pandas as pd
-
+import sys
 
 def split_name(name):
     """Splits a full name formatted as 'Last, First' into (First Name, Last Name).
@@ -319,4 +319,20 @@ def transform_excel_to_csv(input_file_path, output_csv_path):
 
 
 if __name__ == "__main__":
-    transform_excel_to_csv("/tmp/Admin.xlsx", "output_roster.csv")
+    # Command-Line Argument Parsing
+    # Ensure exactly 2 arguments are passed after the script name
+    if len(sys.argv) != 3:
+        print("Error: Invalid number of arguments.")
+        print(f"Usage: python {sys.argv[0]} <input_excel_file> <output_csv_file>")
+        print("Example: python script.py registrations.xlsx final_roster.csv")
+        sys.exit(1)
+
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+
+    try:
+        transform_excel_to_csv(
+            input_file_path=input_file, output_csv_path=output_file)
+    except Exception as e:
+        print(f"\nExecution Failed: {e}")
+        sys.exit(1)
