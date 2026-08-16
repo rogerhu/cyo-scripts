@@ -75,16 +75,16 @@ def process_parents(row):
     Matches Registration Email to Parent 1 or Parent 2.
     Raises ValueError if Registration Email matches neither.
     """
-    reg_email = str(row.get("Registration Email", "")).strip().lower()
+    reg_email = clean_email(row.get("Registration Email", "")).lower()
 
     # Parent 1 raw data
     p1_name = row.get("Parent 1 Name", "")
-    p1_email = str(row.get("Parent 1 Email", "")).strip()
+    p1_email = clean_email(row.get("Parent 1 Email", ""))
     p1_cell = format_phone(row.get("Parent 1 Cell", ""))
 
     # Parent 2 raw data
     p2_name = row.get("Parent 2 Name", "")
-    p2_email = str(row.get("Parent 2 Email", "")).strip()
+    p2_email = clean_email(row.get("Parent 2 Email", ""))
     p2_cell = format_phone(row.get("Parent 2 Cell", ""))
 
     p1_match = reg_email and (p1_email.lower() == reg_email)
@@ -187,6 +187,15 @@ def process_school_fields(row):
             "School Attending in Fall 2026": fall_school,
         }
     )
+
+def clean_email(email_val):
+    """Cleans email fields, returning an empty string if missing or 'nan'."""
+    if pd.isna(email_val):
+        return ""
+    email_str = str(email_val).strip()
+    if email_str.lower() in ["nan", "none", "null"]:
+        return ""
+    return email_str
 
 def transform_excel_to_csv(input_file_path, output_csv_path):
     df = pd.read_excel(input_file_path)

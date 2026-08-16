@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
 
-from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob, format_phone, process_school_fields
+from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob, format_phone, process_school_fields, clean_email
 
 
 class TestExcelToCsvTransformer(unittest.TestCase):
@@ -224,6 +224,12 @@ class TestExcelToCsvTransformer(unittest.TestCase):
             row = pd.Series(row_dict)
             res = process_school_fields(row)
             self.assertEqual(res["School Attending in Fall 2026"], expected)
+
+    def test_clean_email(self):
+        self.assertEqual(clean_email("nan"), "")
+        self.assertEqual(clean_email("NAN"), "")
+        self.assertEqual(clean_email(None), "")
+        self.assertEqual(clean_email("  user@test.com  "), "user@test.com")
 
 if __name__ == "__main__":
     unittest.main()
