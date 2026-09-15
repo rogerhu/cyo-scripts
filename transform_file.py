@@ -171,6 +171,8 @@ def process_school_fields(row):
         target_school = "Burton Valley Elementary"
     elif "happy valley" in target_lower:
         target_school = "Happy Valley Elementary"
+    elif "lafayette elementary" in target_lower:
+        target_school = "Lafayette Elementary"
     elif "seven hills" in target_lower:
         target_school = "The Seven Hills School"
 
@@ -250,10 +252,8 @@ def transform_excel_to_csv(input_file_path, output_csv_path):
         lambda x: str(x).strip() if pd.notna(x) and str(x).lower() != "nan" else ""
     )
 
-    # Athlete Information
-    athlete_names = df["Athlete Name"].apply(split_name)
-    out_df["first"] = [n[0] for n in athlete_names]
-    out_df["last"] = [n[1] for n in athlete_names]
+    out_df["first"] = df["First Name"]
+    out_df["last"] = df["Last Name"]
 
     # Address & Contact
     out_df["address"] = [

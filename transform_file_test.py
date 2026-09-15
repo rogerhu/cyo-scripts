@@ -128,10 +128,12 @@ class TestExcelToCsvTransformer(unittest.TestCase):
         mock_input = pd.DataFrame(
             [
                 {
-                    "Athlete Name": "Runner, Alex",
+                    "First Name": "Alex",
+                    "Last Name": "Runner",
                     "Address Line 1": "100 Track Way",
                     "Address Line 2": "",
                     "City": "Springfield",
+                    "Order ID": 123,
                     "State": "IL",
                     "ZIP": "62701",
                     "DOB": "2010-05-15",
@@ -175,16 +177,16 @@ class TestExcelToCsvTransformer(unittest.TestCase):
     def test_waitlist_filtering(self):
         df_data = pd.DataFrame(
             [
-                {"Waitlist": "Yes", "Athlete Name": "Smith, John"},
-                {"Waitlist": "No", "Athlete Name": "Doe, Jane"},
-                {"Waitlist": None, "Athlete Name": "Brown, Bob"},
+                {"Waitlist": "Yes", "First Name": "John", "Last Name": "Smith"},
+                {"Waitlist": "No", "First Name": "Jane", "Last Name": "Doe"},
+                {"Waitlist": None, "Fist Name": "Bob", "Last Name": "Brown"}
             ]
         )
         mask = df_data["Waitlist"].astype(str).str.strip().str.lower() == "yes"
         filtered_df = df_data[~mask]
 
         self.assertEqual(len(filtered_df), 2)
-        self.assertNotIn("Smith, John", filtered_df["Athlete Name"].values)
+        self.assertNotIn("Smith", filtered_df["Last Name"].values)
 
     def test_process_school_fields(self):
         # St. Pereptua condition
