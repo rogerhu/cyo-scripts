@@ -201,7 +201,9 @@ def clean_email(email_val):
     return email_str
 
 def process_zip(zip_code):
-    return int(float(zip_code))
+    if pd.isna(zip_code):
+        return ""
+    return str(int(float(zip_code)))
 
 def transform_excel_to_csv(input_file_path, output_csv_path, sheet_name):
     df = pd.read_excel(input_file_path, sheet_name)
@@ -266,7 +268,7 @@ def transform_excel_to_csv(input_file_path, output_csv_path, sheet_name):
     ]
     out_df["city"] = df.get("City", "")
     out_df["state"] = df.get("State", "")
-    out_df["zip"] = process_zip(df.get("ZIP", ""))
+    out_df["zip"] = df.get("ZIP", "").apply(process_zip)
 
     # Format DOB to MM/DD/YYYY
     out_df["birthdate"] = df.get("DOB", "").apply(format_dob)
