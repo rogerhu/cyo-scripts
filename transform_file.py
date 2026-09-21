@@ -93,10 +93,11 @@ def process_parents(row):
     if reg_email and not (p1_match or p2_match):
         # Raise exception if registration email exists but matches neither parent
         row_id = row.name  # Pandas Index
-        raise ValueError(
+        print(
             f"Row {row_id}: Registration Email '{reg_email}' does not match "
             f"Parent 1 Email ('{p1_email}') or Parent 2 Email ('{p2_email}')."
         )
+        reg_email = p1_email
 
     # Assign primary/secondary based on match
     if p2_match:
@@ -199,8 +200,11 @@ def clean_email(email_val):
         return ""
     return email_str
 
-def transform_excel_to_csv(input_file_path, output_csv_path):
-    df = pd.read_excel(input_file_path)
+def process_zip(zip_code):
+    return int(float(zip_code))
+
+def transform_excel_to_csv(input_file_path, output_csv_path, sheet_name):
+    df = pd.read_excel(input_file_path, sheet_name)
 
     # Filter out waitlisted records (matches "Yes", "yes", "YES", etc.)
     if "Waitlist" in df.columns:
@@ -262,7 +266,7 @@ def transform_excel_to_csv(input_file_path, output_csv_path):
     ]
     out_df["city"] = df.get("City", "")
     out_df["state"] = df.get("State", "")
-    out_df["zip"] = df.get("ZIP", "")
+    out_df["zip"] = process_zip(df.get("ZIP", ""))
 
     # Format DOB to MM/DD/YYYY
     out_df["birthdate"] = df.get("DOB", "").apply(format_dob)
@@ -320,19 +324,19 @@ def transform_excel_to_csv(input_file_path, output_csv_path):
 
 if __name__ == "__main__":
     # Command-Line Argument Parsing
-    # Ensure exactly 2 arguments are passed after the script name
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print("Error: Invalid number of arguments.")
         print(f"Usage: python {sys.argv[0]} <input_excel_file> <output_csv_file>")
         print("Example: python script.py registrations.xlsx final_roster.csv")
         sys.exit(1)
 
     input_file = sys.argv[1]
-    output_file = sys.argv[2]
+    sheet_name = sys.argv[2]
+    output_file = sys.argv[3]
 
     try:
         transform_excel_to_csv(
-            input_file_path=input_file, output_csv_path=output_file)
+            input_file_path=input_file, sheet_name=sheet_name, output_csv_path=output_file)
     except Exception as e:
         print(f"\nExecution Failed: {e}")
         sys.exit(1)

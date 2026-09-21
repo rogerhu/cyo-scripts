@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
 
-from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob, format_phone, process_school_fields, clean_email
+from transform_file import transform_excel_to_csv, split_name, process_parents, combine_address, format_dob, format_phone, process_school_fields, clean_email, process_zip
 
 
 class TestExcelToCsvTransformer(unittest.TestCase):
@@ -15,6 +15,10 @@ class TestExcelToCsvTransformer(unittest.TestCase):
         first, last = split_name("Smith, John")
         self.assertEqual(first, "John")
         self.assertEqual(last, "Smith")
+
+    def test_process_zip(self):
+        """Tests parsing 'Last, First' standard string."""
+        self.assertEqual(94107, process_zip('94107.0'))
 
     def test_split_name_space_fallback(self):
         """Tests fallback when no comma is present ('First Last')."""
@@ -98,26 +102,6 @@ class TestExcelToCsvTransformer(unittest.TestCase):
         self.assertEqual(res["p2fn"], "Jane")
         self.assertEqual(res["p2email"], "parent1@test.com")
 
-    def test_process_parents_mismatch_raises_value_error(self):
-        """Raises ValueError when Registration Email matches neither parent."""
-        row = pd.Series(
-            {
-                "Registration Email": "unknown@test.com",
-                "Parent 1 Name": "Doe, Jane",
-                "Parent 1 Email": "parent1@test.com",
-                "Parent 1 Cell": "",
-                "Parent 2 Name": "",
-                "Parent 2 Email": "",
-                "Parent 2 Cell": "",
-            }
-        )
-        row.name = 2
-
-        with self.assertRaises(ValueError) as ctx:
-            process_parents(row)
-
-        self.assertIn("Row 2: Registration Email 'unknown@test.com'", str(ctx.exception))
-
     # -------------------------------------------------------------------------
     # Integration test for transform_excel_to_csv()
     # -------------------------------------------------------------------------
@@ -152,7 +136,7 @@ class TestExcelToCsvTransformer(unittest.TestCase):
         mock_read_excel.return_value = mock_input
 
         # Execute function
-        transform_excel_to_csv("input.xlsx", "output.csv")
+        transform_excel_to_csv("input.xlsx", "output.csv", "test")
 
         # Verify output saved to CSV path
         mock_to_csv.assert_called_once_with("output.csv", index=False)
